@@ -10,11 +10,43 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener, View.OnClickListener {
 
-    public static final int SENSITIVITY_MEDIUM = 13;
+    class Point {
+        static final int MIN_VALUE = 7;
+
+        float x;
+        float y;
+        float z;
+
+        Point() {}
+
+        Point(float x, float y, float z) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+
+        Point getDistance(Point p) {
+            return new Point(
+                    Math.abs(x - p.x),
+                    Math.abs(y - p.y),
+                    Math.abs(z - p.z));
+        }
+
+        int getCount() {
+            int sum = 0;
+            sum += x > MIN_VALUE ? 1 : 0;
+            sum += y > MIN_VALUE ? 1 : 0;
+            sum += z > MIN_VALUE ? 1 : 0;
+            return sum;
+        }
+    }
+
+    public static final int SENSITIVITY_MEDIUM = 3;
 
     private TextView mMessageText;
     private Button mStartButton;
@@ -23,11 +55,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
     private long mLastUpdateTime = -1;
-    private long mStartTime = -1;
-
-    private LinkedList<Long> xTimeList;
-    private LinkedList<Long> yTimeList;
-    private LinkedList<Long> zTimeList;
+    private Point mLastPoint;
+    private List<Integer> mCounterList;
+    private boolean mDetectNod = false;
+    private boolean mDetectShake = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,39 +72,39 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mStartButton.setOnClickListener(this);
         mFinishButton.setOnClickListener(this);
 
-        xTimeList = new LinkedList<>();
-        yTimeList = new LinkedList<>();
-        zTimeList = new LinkedList<>();
+        mCounterList = new ArrayList<>();
     }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
         if (mLastUpdateTime == -1) {
             mLastUpdateTime = event.timestamp;
-            mStartTime = event.timestamp;
             return;
         }
 
-        if (event.timestamp - mLastUpdateTime > 1e8) {
-            float ax = event.values[0];
-            float ay = event.values[1];
-            float az = event.values[2];
+        if (event.timestamp - mLastUpdateTime > 5e7) {
+            Point point = new Point(event.values[0], event.values[1], event.values[2]);
 
-            if (Math.abs(ax) > SENSITIVITY_MEDIUM && (xTimeList.isEmpty() || event.timestamp - xTimeList.getLast() > 3e8)) {
-                xTimeList.add(event.timestamp);
+            if (mCounterList.size() == 5) {
+                int sum = 0;
+                for (int i : mCounterList) {
+                    sum += i;
+                }
+                if (sum > 1) {
+                    mDetectNod = true;
+                }
+                if (sum > SENSITIVITY_MEDIUM) {
+                    mDetectShake = true;
+                }
+                mCounterList.clear();
             }
 
-            if (Math.abs(ay) > SENSITIVITY_MEDIUM && (yTimeList.isEmpty() || event.timestamp - yTimeList.getLast() > 3e8)) {
-                yTimeList.add(event.timestamp);
+            if (mLastPoint != null) {
+                mCounterList.add(mLastPoint.getDistance(point).getCount());
             }
-
-            if (Math.abs(az) > SENSITIVITY_MEDIUM && (zTimeList.isEmpty() || event.timestamp - zTimeList.getLast() > 3e8)) {
-                zTimeList.add(event.timestamp);
-            }
-
-            // Log.e("Test", String.format("x:%f, y:%f, z:%f", ax, ay, az));
 
             mLastUpdateTime = event.timestamp;
+            mLastPoint = point;
         }
     }
 
@@ -86,10 +117,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.start: {
+                mLastPoint = null;
                 mLastUpdateTime = -1;
-                xTimeList.clear();
-                yTimeList.clear();
-                zTimeList.clear();
+                mDetectNod = false;
+                mDetectShake = false;
+                mCounterList.clear();
 
                 if (mSensorManager == null) {
                     mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -100,7 +132,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 }
 
                 mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_GAME);
-                mMessageText.setText("監測動作中...");
+                mMessageText.setText("監測動作是點還是晃...");
                 break;
             }
             case R.id.finish: {
@@ -109,7 +141,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     mSensorManager = null;
                     mAccelerometer = null;
                 }
-                String message = "點:" + zTimeList.size() + ", 晃:" + xTimeList.size();
+                String message = mDetectNod ? ( mDetectShake ? "晃" : "點") : "無動作";
                 mMessageText.setText(message);
                 break;
             }
@@ -118,9 +150,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     protected void onDestroy() {
-        mSensorManager.unregisterListener(this, mAccelerometer);
-        mSensorManager = null;
-        mAccelerometer = null;
+        if (mSensorManager != null && mAccelerometer != null) {
+            mSensorManager.unregisterListener(this, mAccelerometer);
+            mSensorManager = null;
+            mAccelerometer = null;
+        }
         super.onDestroy();
     }
 }
