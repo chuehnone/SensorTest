@@ -8,9 +8,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
+import android.widget.EditText;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener, View.OnClickListener {
@@ -18,13 +21,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     class Point {
         static final int MIN_VALUE = 7;
 
+        Long time;
         float x;
         float y;
         float z;
 
         Point() {}
 
-        Point(float x, float y, float z) {
+        Point (float x, float y, float z) {
+            this(0l, x, y, z);
+        }
+
+        Point(Long time, float x, float y, float z) {
+            this.time = time;
             this.x = x;
             this.y = y;
             this.z = z;
@@ -44,35 +53,45 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             sum += z > MIN_VALUE ? 1 : 0;
             return sum;
         }
+
+        @Override
+        public String toString() {
+            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss.SSS");
+            return String.format("time:%s, x:%f, y:%f, z:%f", sdf.format(new Date(time)), x, y, z);
+        }
     }
 
     public static final int SENSITIVITY_MEDIUM = 3;
+    static final int MAX_COUNT = 5;
 
-    private TextView mMessageText;
+    static final int STATUS_NOTHING = 0;
+    static final int STATUS_NOD = 1;
+    static final int STATUS_SHAKE = 2;
+
+    private EditText mMessageText;
     private Button mStartButton;
     private Button mFinishButton;
 
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
     private long mLastUpdateTime = -1;
-    private Point mLastPoint;
-    private List<Integer> mCounterList;
-    private boolean mDetectNod = false;
-    private boolean mDetectShake = false;
+    private List<Point> mPointList;
+    private List<Integer> mStatusList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mMessageText = (TextView) findViewById(R.id.message);
+        mMessageText = (EditText) findViewById(R.id.message);
         mStartButton = (Button) findViewById(R.id.start);
         mFinishButton = (Button) findViewById(R.id.finish);
 
         mStartButton.setOnClickListener(this);
         mFinishButton.setOnClickListener(this);
 
-        mCounterList = new ArrayList<>();
+        mPointList = new ArrayList<>(MAX_COUNT);
+        mStatusList = new ArrayList<>();
     }
 
     @Override
@@ -83,28 +102,35 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
 
         if (event.timestamp - mLastUpdateTime > 5e7) {
-            Point point = new Point(event.values[0], event.values[1], event.values[2]);
-
-            if (mCounterList.size() == 5) {
+            Point point = new Point(Calendar.getInstance().getTimeInMillis(), event.values[0], event.values[1], event.values[2]);
+            mPointList.add(point);
+            if (mPointList.size() == MAX_COUNT) {
                 int sum = 0;
-                for (int i : mCounterList) {
-                    sum += i;
+                for (int i = 1 ; i < MAX_COUNT ; i++) {
+                    sum += mPointList.get(i).getDistance(mPointList.get(i-1)).getCount();
                 }
-                if (sum > 1) {
-                    mDetectNod = true;
-                }
-                if (sum > SENSITIVITY_MEDIUM) {
-                    mDetectShake = true;
-                }
-                mCounterList.clear();
-            }
 
-            if (mLastPoint != null) {
-                mCounterList.add(mLastPoint.getDistance(point).getCount());
+                boolean isPrint = true;
+                String message = "";
+                if (sum > 1 && sum <= SENSITIVITY_MEDIUM) {
+                    mStatusList.add(STATUS_NOD);
+                    message = "點";
+                } else if (sum > SENSITIVITY_MEDIUM) {
+                    mStatusList.add(STATUS_SHAKE);
+                    message = "晃";
+                } else {
+                    mStatusList.add(STATUS_NOTHING);
+                    isPrint = false;
+                }
+                if (isPrint) {
+                    mMessageText.append("\n");
+                    mMessageText.append(message);
+                    mMessageText.append(mPointList.toString());
+                }
+                mPointList.clear();
             }
 
             mLastUpdateTime = event.timestamp;
-            mLastPoint = point;
         }
     }
 
@@ -117,11 +143,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.start: {
-                mLastPoint = null;
                 mLastUpdateTime = -1;
-                mDetectNod = false;
-                mDetectShake = false;
-                mCounterList.clear();
+                mPointList.clear();
+                mStatusList.clear();
 
                 if (mSensorManager == null) {
                     mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -132,7 +156,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 }
 
                 mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_GAME);
-                mMessageText.setText("監測動作是點還是晃...");
+                mMessageText.setText("監測動作點與晃的數量...");
                 break;
             }
             case R.id.finish: {
@@ -140,9 +164,27 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     mSensorManager.unregisterListener(this, mAccelerometer);
                     mSensorManager = null;
                     mAccelerometer = null;
+
+                    int nod = 0, shake = 0;
+                    for (int i = 0 ; i < mStatusList.size() ; i++) {
+                        switch (mStatusList.get(i)) {
+                            case STATUS_NOD:
+                                nod++;
+                                break;
+                            case STATUS_SHAKE:
+                                for (int j = 1 ; j <= 3 && i - j >= 0 ; j++) {
+                                    if (mStatusList.get(i - j) == STATUS_NOD) {
+                                        mStatusList.set(i - j, STATUS_NOTHING);
+                                        nod--;
+                                    }
+                                }
+                                shake++;
+                                break;
+                        }
+                    }
+                    String message = String.format("\n點:%d, 晃:%d", nod, shake);
+                    mMessageText.append(message);
                 }
-                String message = mDetectNod ? ( mDetectShake ? "晃" : "點") : "無動作";
-                mMessageText.setText(message);
                 break;
             }
         }
