@@ -17,10 +17,11 @@ import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener, View.OnClickListener {
+    static int SENSITIVITY_MEDIUM = 3; // M
+    static int MIN_VALUE = 7; // F
+    static final int MAX_COUNT = 5;
 
     class Point {
-        static final int MIN_VALUE = 7;
-
         Long time;
         float x;
         float y;
@@ -61,9 +62,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    public static final int SENSITIVITY_MEDIUM = 3;
-    static final int MAX_COUNT = 5;
-
     static final int STATUS_NOTHING = 0;
     static final int STATUS_NOD = 1;
     static final int STATUS_SHAKE = 2;
@@ -71,6 +69,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private EditText mMessageText;
     private Button mStartButton;
     private Button mFinishButton;
+    private EditText mInputM;
+    private EditText mInputF;
 
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
@@ -86,6 +86,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mMessageText = (EditText) findViewById(R.id.message);
         mStartButton = (Button) findViewById(R.id.start);
         mFinishButton = (Button) findViewById(R.id.finish);
+        mInputM = (EditText) findViewById(R.id.input_m);
+        mInputF = (EditText) findViewById(R.id.input_f);
 
         mStartButton.setOnClickListener(this);
         mFinishButton.setOnClickListener(this);
@@ -146,6 +148,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 mLastUpdateTime = -1;
                 mPointList.clear();
                 mStatusList.clear();
+
+                String m = mInputM.getText().toString();
+                if (m.matches("\\d+")) {
+                    SENSITIVITY_MEDIUM = Integer.parseInt(m);
+                }
+                String f = mInputF.getText().toString();
+                if (f.matches("\\d+")) {
+                    MIN_VALUE = Integer.parseInt(f);
+                }
 
                 if (mSensorManager == null) {
                     mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);

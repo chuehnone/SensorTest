@@ -21,11 +21,53 @@
         android:layout_alignParentEnd="true"
         android:text="結束"/>
 
+    <LinearLayout
+        android:id="@+id/layout_f"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/start"
+        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ｆ："/>
+
+        <EditText
+            android:id="@+id/input_f"
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:hint="7"
+            android:inputType="number"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_m"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/layout_f"
+        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ｍ："/>
+
+        <EditText
+            android:id="@+id/input_m"
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:hint="3"
+            android:inputType="number"/>
+    </LinearLayout>
+
     <EditText
         android:id="@+id/message"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/start"
+        android:layout_above="@+id/layout_m"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true" />
 </RelativeLayout>
