@@ -17,7 +17,8 @@ import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener, View.OnClickListener {
-    static int SENSITIVITY_MEDIUM = 3; // M
+    static int NOD_M = 3; // nod M
+    static int SHAKE_M = 5; // shake M
     static int MIN_VALUE = 7; // F
     static final int MAX_COUNT = 5;
 
@@ -69,7 +70,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private EditText mMessageText;
     private Button mStartButton;
     private Button mFinishButton;
-    private EditText mInputM;
+    private EditText mInputMNod;
+    private EditText mInputMShake;
     private EditText mInputF;
 
     private SensorManager mSensorManager;
@@ -86,7 +88,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mMessageText = (EditText) findViewById(R.id.message);
         mStartButton = (Button) findViewById(R.id.start);
         mFinishButton = (Button) findViewById(R.id.finish);
-        mInputM = (EditText) findViewById(R.id.input_m);
+        mInputMNod = (EditText) findViewById(R.id.input_m_nod);
+        mInputMShake = (EditText) findViewById(R.id.input_m_shake);
         mInputF = (EditText) findViewById(R.id.input_f);
 
         mStartButton.setOnClickListener(this);
@@ -103,7 +106,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             return;
         }
 
-        if (event.timestamp - mLastUpdateTime > 5e7) {
+        double max = mPointList.size() == MAX_COUNT ? 25e7 : 5e7;
+
+        if (event.timestamp - mLastUpdateTime > max) {
             Point point = new Point(Calendar.getInstance().getTimeInMillis(), event.values[0], event.values[1], event.values[2]);
             mPointList.add(point);
             if (mPointList.size() == MAX_COUNT) {
@@ -112,18 +117,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     sum += mPointList.get(i).getDistance(mPointList.get(i-1)).getCount();
                 }
 
-                boolean isPrint = true;
+                boolean isPrint = false;
                 String message = "";
-                if (sum > 1 && sum <= SENSITIVITY_MEDIUM) {
-                    mStatusList.add(STATUS_NOD);
+                int status = STATUS_NOTHING;
+                if (sum >= NOD_M) {
+                    status = STATUS_NOD;
                     message = "點";
-                } else if (sum > SENSITIVITY_MEDIUM) {
-                    mStatusList.add(STATUS_SHAKE);
-                    message = "晃";
-                } else {
-                    mStatusList.add(STATUS_NOTHING);
-                    isPrint = false;
+                    isPrint = true;
                 }
+                if (sum >= SHAKE_M) {
+                    status = STATUS_SHAKE;
+                    message = "晃";
+                    isPrint = true;
+                }
+
+                mStatusList.add(status);
                 if (isPrint) {
                     mMessageText.append("\n");
                     mMessageText.append(message);
@@ -149,9 +157,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 mPointList.clear();
                 mStatusList.clear();
 
-                String m = mInputM.getText().toString();
+                String m = mInputMNod.getText().toString();
                 if (m.matches("\\d+")) {
-                    SENSITIVITY_MEDIUM = Integer.parseInt(m);
+                    NOD_M = Integer.parseInt(m);
+                }
+                m = mInputMShake.getText().toString();
+                if (m.matches("\\d+")) {
+                    SHAKE_M = Integer.parseInt(m);
                 }
                 String f = mInputF.getText().toString();
                 if (f.matches("\\d+")) {

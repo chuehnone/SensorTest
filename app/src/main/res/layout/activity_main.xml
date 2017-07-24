@@ -43,7 +43,7 @@
     </LinearLayout>
 
     <LinearLayout
-        android:id="@+id/layout_m"
+        android:id="@+id/layout_m_shake"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_above="@+id/layout_f"
@@ -53,10 +53,31 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Ｍ："/>
+            android:text="晃Ｍ："/>
 
         <EditText
-            android:id="@+id/input_m"
+            android:id="@+id/input_m_shake"
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:hint="5"
+            android:inputType="number"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_m_nod"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/layout_m_shake"
+        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="點Ｍ："/>
+
+        <EditText
+            android:id="@+id/input_m_nod"
             android:layout_width="40dp"
             android:layout_height="wrap_content"
             android:hint="3"
@@ -67,7 +88,7 @@
         android:id="@+id/message"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/layout_m"
+        android:layout_above="@+id/layout_m_nod"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true" />
 </RelativeLayout>
