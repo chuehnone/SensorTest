@@ -20,7 +20,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     static int NOD_M = 3; // nod M
     static int SHAKE_M = 5; // shake M
     static int MIN_VALUE = 7; // F
-    static final int MAX_COUNT = 5;
+    static final int MAX_DISTANCE = 5;
+    static final int MAX_COUNT = 8;
+    static final int MAX_TEMP_COUNT = 5;
 
     class Point {
         Long time;
@@ -77,8 +79,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
     private long mLastUpdateTime = -1;
+    private int mTempCount = 0;
     private List<Point> mPointList;
     private List<Integer> mStatusList;
+    private boolean mPringTemp = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,38 +110,49 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             return;
         }
 
-        double max = mPointList.size() == MAX_COUNT ? 25e7 : 5e7;
-
-        if (event.timestamp - mLastUpdateTime > max) {
+        if (event.timestamp - mLastUpdateTime > 5e7) {
             Point point = new Point(Calendar.getInstance().getTimeInMillis(), event.values[0], event.values[1], event.values[2]);
-            mPointList.add(point);
-            if (mPointList.size() == MAX_COUNT) {
-                int sum = 0;
-                for (int i = 1 ; i < MAX_COUNT ; i++) {
-                    sum += mPointList.get(i).getDistance(mPointList.get(i-1)).getCount();
-                }
 
+            if (mPringTemp) {
+                mTempCount++;
+                if (mTempCount == MAX_TEMP_COUNT) mPringTemp = false;
+                mMessageText.append("\n");
+                mMessageText.append(point.toString());
+            } else if (mPointList.size() == MAX_COUNT) {
                 boolean isPrint = false;
                 String message = "";
                 int status = STATUS_NOTHING;
-                if (sum >= NOD_M) {
-                    status = STATUS_NOD;
-                    message = "點";
-                    isPrint = true;
-                }
-                if (sum >= SHAKE_M) {
-                    status = STATUS_SHAKE;
-                    message = "晃";
-                    isPrint = true;
+
+                for (int max = MAX_DISTANCE ; max <= MAX_COUNT ; max++) {
+                    int sum = 0;
+                    for (int i = max - MAX_DISTANCE + 1 ; i < max ; i++) {
+                        sum += mPointList.get(i).getDistance(mPointList.get(i-1)).getCount();
+                    }
+
+                    if (sum >= NOD_M) {
+                        status = STATUS_NOD;
+                        message = "點";
+                        isPrint = true;
+                    }
+                    if (sum >= SHAKE_M) {
+                        status = STATUS_SHAKE;
+                        message = "晃";
+                        isPrint = true;
+                        break;
+                    }
                 }
 
                 mStatusList.add(status);
                 if (isPrint) {
+                    mPringTemp = true;
                     mMessageText.append("\n");
                     mMessageText.append(message);
                     mMessageText.append(mPointList.toString());
                 }
                 mPointList.clear();
+                mTempCount = 0;
+            } else {
+                mPointList.add(point);
             }
 
             mLastUpdateTime = event.timestamp;
@@ -154,6 +169,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         switch (v.getId()) {
             case R.id.start: {
                 mLastUpdateTime = -1;
+                mTempCount = 0;
+                mPringTemp = false;
                 mPointList.clear();
                 mStatusList.clear();
 
