@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     static int SHAKE_M = 5; // shake M
     static int MIN_VALUE = 7; // F
     static final int MAX_DISTANCE = 5;
-    static final int MAX_COUNT = 8;
+    static final int MAX_ADDITION_COUNT = 3;
     static final int MAX_TEMP_COUNT = 5;
 
     class Point {
@@ -99,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mStartButton.setOnClickListener(this);
         mFinishButton.setOnClickListener(this);
 
-        mPointList = new ArrayList<>(MAX_COUNT);
+        mPointList = new ArrayList<>(MAX_DISTANCE + MAX_ADDITION_COUNT);
         mStatusList = new ArrayList<>();
     }
 
@@ -118,12 +118,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 if (mTempCount == MAX_TEMP_COUNT) mPringTemp = false;
                 mMessageText.append("\n");
                 mMessageText.append(point.toString());
-            } else if (mPointList.size() == MAX_COUNT) {
+            } else if (mPointList.size() == MAX_DISTANCE + MAX_ADDITION_COUNT) {
                 boolean isPrint = false;
                 String message = "";
                 int status = STATUS_NOTHING;
 
-                for (int max = MAX_DISTANCE ; max <= MAX_COUNT ; max++) {
+                for (int max = MAX_DISTANCE ; max <= MAX_DISTANCE + MAX_ADDITION_COUNT ; max++) {
                     int sum = 0;
                     for (int i = max - MAX_DISTANCE + 1 ; i < max ; i++) {
                         sum += mPointList.get(i).getDistance(mPointList.get(i-1)).getCount();
