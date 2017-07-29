@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private int mTempCount = 0;
     private List<Point> mPointList;
     private List<Integer> mStatusList;
-    private boolean mPringTemp = false;
+    private boolean mPrintTemp = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -113,9 +113,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (event.timestamp - mLastUpdateTime > 5e7) {
             Point point = new Point(Calendar.getInstance().getTimeInMillis(), event.values[0], event.values[1], event.values[2]);
 
-            if (mPringTemp) {
+            if (mPrintTemp) {
                 mTempCount++;
-                if (mTempCount == MAX_TEMP_COUNT) mPringTemp = false;
+                if (mTempCount == MAX_TEMP_COUNT) mPrintTemp = false;
                 mMessageText.append("\n");
                 mMessageText.append(point.toString());
             } else if (mPointList.size() == MAX_DISTANCE + MAX_ADDITION_COUNT) {
@@ -144,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
                 mStatusList.add(status);
                 if (isPrint) {
-                    mPringTemp = true;
+                    mPrintTemp = true;
                     mMessageText.append("\n");
                     mMessageText.append(message);
                     mMessageText.append(mPointList.toString());
@@ -170,7 +170,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             case R.id.start: {
                 mLastUpdateTime = -1;
                 mTempCount = 0;
-                mPringTemp = false;
+                mPrintTemp = false;
                 mPointList.clear();
                 mStatusList.clear();
 
@@ -212,12 +212,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                                 nod++;
                                 break;
                             case STATUS_SHAKE:
-                                for (int j = 1 ; j <= 3 && i - j >= 0 ; j++) {
-                                    if (mStatusList.get(i - j) == STATUS_NOD) {
-                                        mStatusList.set(i - j, STATUS_NOTHING);
-                                        nod--;
-                                    }
-                                }
                                 shake++;
                                 break;
                         }
