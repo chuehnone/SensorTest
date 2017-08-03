@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     static int NOD_MAX = 5; // nod Max
     static int SHAKE_M = 7; // shake M
     static int MIN_VALUE = 7; // F
-    static final int MAX_DISTANCE = 5;
+    static int MAX_DISTANCE = 5;
     static final int MAX_ADDITION_COUNT = 3;
     static final int MAX_TEMP_COUNT = 5;
 
@@ -77,6 +77,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private EditText mInputMaxNod;
     private EditText mInputMShake;
     private EditText mInputF;
+    private EditText mInputBlock;
 
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
@@ -98,6 +99,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mInputMaxNod = (EditText) findViewById(R.id.input_max_nod);
         mInputMShake = (EditText) findViewById(R.id.input_m_shake);
         mInputF = (EditText) findViewById(R.id.input_f);
+        mInputBlock = (EditText) findViewById(R.id.input_block);
 
         mStartButton.setOnClickListener(this);
         mFinishButton.setOnClickListener(this);
@@ -177,21 +179,25 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 mPointList.clear();
                 mStatusList.clear();
 
-                String m = mInputMinNod.getText().toString();
-                if (m.matches("\\d+")) {
-                    NOD_MIN = Integer.parseInt(m);
+                String input = mInputMinNod.getText().toString();
+                if (input.matches("\\d+")) {
+                    NOD_MIN = Integer.parseInt(input);
                 }
-                m = mInputMaxNod.getText().toString();
-                if (m.matches("\\d+")) {
-                    NOD_MAX = Integer.parseInt(m);
+                input = mInputMaxNod.getText().toString();
+                if (input.matches("\\d+")) {
+                    NOD_MAX = Integer.parseInt(input);
                 }
-                m = mInputMShake.getText().toString();
-                if (m.matches("\\d+")) {
-                    SHAKE_M = Integer.parseInt(m);
+                input = mInputMShake.getText().toString();
+                if (input.matches("\\d+")) {
+                    SHAKE_M = Integer.parseInt(input);
                 }
-                String f = mInputF.getText().toString();
-                if (f.matches("\\d+")) {
-                    MIN_VALUE = Integer.parseInt(f);
+                input = mInputF.getText().toString();
+                if (input.matches("\\d+")) {
+                    MIN_VALUE = Integer.parseInt(input);
+                }
+                input = mInputBlock.getText().toString();
+                if (input.matches("\\d+")) {
+                    MAX_DISTANCE = Integer.parseInt(input);
                 }
 
                 if (mSensorManager == null) {
