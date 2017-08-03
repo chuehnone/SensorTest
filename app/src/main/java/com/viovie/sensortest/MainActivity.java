@@ -17,8 +17,9 @@ import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener, View.OnClickListener {
-    static int NOD_M = 3; // nod M
-    static int SHAKE_M = 5; // shake M
+    static int NOD_MIN = 3; // nod Min
+    static int NOD_MAX = 5; // nod Max
+    static int SHAKE_M = 7; // shake M
     static int MIN_VALUE = 7; // F
     static final int MAX_DISTANCE = 5;
     static final int MAX_ADDITION_COUNT = 3;
@@ -72,7 +73,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private EditText mMessageText;
     private Button mStartButton;
     private Button mFinishButton;
-    private EditText mInputMNod;
+    private EditText mInputMinNod;
+    private EditText mInputMaxNod;
     private EditText mInputMShake;
     private EditText mInputF;
 
@@ -92,7 +94,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mMessageText = (EditText) findViewById(R.id.message);
         mStartButton = (Button) findViewById(R.id.start);
         mFinishButton = (Button) findViewById(R.id.finish);
-        mInputMNod = (EditText) findViewById(R.id.input_m_nod);
+        mInputMinNod = (EditText) findViewById(R.id.input_min_nod);
+        mInputMaxNod = (EditText) findViewById(R.id.input_max_nod);
         mInputMShake = (EditText) findViewById(R.id.input_m_shake);
         mInputF = (EditText) findViewById(R.id.input_f);
 
@@ -129,7 +132,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         sum += mPointList.get(i).getDistance(mPointList.get(i-1)).getCount();
                     }
 
-                    if (sum >= NOD_M) {
+                    if (sum >= NOD_MIN && sum <= NOD_MAX) {
                         status = STATUS_NOD;
                         message = "點";
                         isPrint = true;
@@ -174,9 +177,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 mPointList.clear();
                 mStatusList.clear();
 
-                String m = mInputMNod.getText().toString();
+                String m = mInputMinNod.getText().toString();
                 if (m.matches("\\d+")) {
-                    NOD_M = Integer.parseInt(m);
+                    NOD_MIN = Integer.parseInt(m);
+                }
+                m = mInputMaxNod.getText().toString();
+                if (m.matches("\\d+")) {
+                    NOD_MAX = Integer.parseInt(m);
                 }
                 m = mInputMShake.getText().toString();
                 if (m.matches("\\d+")) {
