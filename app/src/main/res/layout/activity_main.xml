@@ -52,6 +52,18 @@
             android:layout_height="wrap_content"
             android:hint="5"
             android:inputType="number"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Skip block："/>
+
+        <EditText
+            android:id="@+id/input_skip_block"
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:hint="5"
+            android:inputType="number"/>
     </LinearLayout>
 
     <LinearLayout

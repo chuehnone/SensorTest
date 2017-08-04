@@ -22,8 +22,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     static int SHAKE_M = 7; // shake M
     static int MIN_VALUE = 7; // F
     static int MAX_DISTANCE = 5;
+    static int MAX_TEMP_COUNT = 5;
     static final int MAX_ADDITION_COUNT = 3;
-    static final int MAX_TEMP_COUNT = 5;
 
     class Point {
         Long time;
@@ -78,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private EditText mInputMShake;
     private EditText mInputF;
     private EditText mInputBlock;
+    private EditText mInputSkipBlock;
 
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
@@ -100,6 +101,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mInputMShake = (EditText) findViewById(R.id.input_m_shake);
         mInputF = (EditText) findViewById(R.id.input_f);
         mInputBlock = (EditText) findViewById(R.id.input_block);
+        mInputSkipBlock = (EditText) findViewById(R.id.input_skip_block);
 
         mStartButton.setOnClickListener(this);
         mFinishButton.setOnClickListener(this);
@@ -198,6 +200,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 input = mInputBlock.getText().toString();
                 if (input.matches("\\d+")) {
                     MAX_DISTANCE = Integer.parseInt(input);
+                }
+                input = mInputSkipBlock.getText().toString();
+                if (input.matches("\\d+")) {
+                    MAX_TEMP_COUNT = Integer.parseInt(input);
                 }
 
                 if (mSensorManager == null) {
